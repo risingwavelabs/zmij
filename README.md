@@ -5,6 +5,13 @@
 [<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-zmij-66c2a5?style=for-the-badge&labelColor=555555&logo=docs.rs" height="20">](https://docs.rs/zmij)
 [<img alt="build status" src="https://img.shields.io/github/actions/workflow/status/dtolnay/zmij/ci.yml?branch=master&style=for-the-badge" height="20">](https://github.com/dtolnay/zmij/actions?query=branch%3Amaster)
 
+> [!NOTE]
+> This `compat-ryu` branch of risingwavelabs/zmij differs from upstream zmij only
+> in that positive exponents print without a sign (`1e16`, not `1e+16`), so the
+> output is byte-identical to the `ryu` crate. RisingWave uses it through
+> `[patch.crates-io]`. CI does not run here; test locally with
+> `RUSTFLAGS='--cfg exhaustive' cargo test --release`.
+
 Pure Rust implementation of Żmij, an algorithm to quickly convert floating point
 numbers to decimal strings.
 

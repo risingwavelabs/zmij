@@ -21,12 +21,7 @@ fn ryu_comparison() {
         let float = f64::from_bits(bits);
         let ryu = ryu_buffer.format(float);
         let zmij = zmij_buffer.format(float);
-        let matches = if ryu.contains('e') && !ryu.contains("e-") {
-            ryu.split_once('e') == zmij.split_once("e+")
-        } else {
-            ryu == zmij
-        };
-        if !matches {
+        if ryu != zmij {
             eprintln!("RYU={ryu} ZMIJ={zmij}");
             fail += 1;
         }

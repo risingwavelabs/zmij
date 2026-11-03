@@ -1764,7 +1764,24 @@ impl Buffer {
     pub fn format_finite<F: Float>(&mut self, f: F) -> &str {
         unsafe {
             let end = f.write_to_zmij_buffer(self.bytes.as_mut_ptr().cast::<u8>());
-            let len = end.offset_from(self.bytes.as_ptr().cast::<u8>()) as usize;
+            let mut len = end.offset_from(self.bytes.as_ptr().cast::<u8>()) as usize;
+            let bytes = self.bytes.as_mut_ptr().cast::<u8>();
+            // ryu writes no sign for positive exponents. The sign is followed by
+            // 1 to 3 digits, so it is within the last 4 bytes. Remove it without
+            // a data-dependent branch: inputs mix signs unpredictably.
+            if len >= 4 {
+                let tail = bytes.add(len - 4);
+                let word = u64::from(u32::from_le_bytes(ptr::read(tail.cast::<[u8; 4]>())));
+                let x = word ^ 0x2b2b_2b2b;
+                let zero_bytes = x.wrapping_sub(0x0101_0101) & !x & 0x8080_8080;
+                // Byte index of the lowest '+', or 4 if there is none.
+                let i = u64::from(zero_bytes.trailing_zeros().min(32) / 8);
+                let below = word & ((1u64 << (8 * i)) - 1);
+                let above = (word >> (8 * i + 8)) << (8 * i);
+                let spliced = (below | above) as u32;
+                ptr::write(tail.cast::<[u8; 4]>(), spliced.to_le_bytes());
+                len -= usize::from(i < 4);
+            }
             let slice = slice::from_raw_parts(self.bytes.as_ptr().cast::<u8>(), len);
             str::from_utf8_unchecked(slice)
         }
